@@ -13,10 +13,18 @@ object MainClass {
 
   private val credentialFileAddress: String = "/home/saad/learning/google-cloud/my-first-project-995398db50b9.json"
   private val credentials = GoogleCredentials.fromStream(new FileInputStream(s"$credentialFileAddress"))
-  GoogleCredentials.
+
+
   private val storage = StorageOptions.newBuilder.setCredentials(credentials).setProjectId("adroit-minutia-250910").build.getService
 
   private val bucket = storage.get("test-bucket-fahad")
+
+  def main(args: Array[String]) {
+    printBucketContent()
+    downloadFile()
+    //    uploadFile("/home/saad/Desktop/Saad Ali.pdf")
+    //    printBucketContent()
+  }
 
   def downloadFile() = {
     val blobs = bucket.list().iterateAll()
@@ -28,13 +36,6 @@ object MainClass {
       }
     }
 
-  }
-
-  def main(args: Array[String]) {
-    printBucketContent()
-    downloadFile()
-//    uploadFile("/home/saad/Desktop/Saad Ali.pdf")
-//    printBucketContent()
   }
 
   def printBucketContent(): Unit = {
