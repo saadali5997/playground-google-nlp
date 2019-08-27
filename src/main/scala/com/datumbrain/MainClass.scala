@@ -29,7 +29,11 @@ object MainClass {
             }
           }
         }
+      } catch {
+        case exc: Exception => println(s"Exception occured. Detaisl: ${exc.getMessage}")
       } finally if (language != null) language.close()
+    } catch {
+      case exc: Exception => println(s"Exception occured. Detaisl: ${exc.getMessage}")
     }
   }
 
