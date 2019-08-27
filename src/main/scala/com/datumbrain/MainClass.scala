@@ -1,60 +1,36 @@
 package com.datumbrain
 
-import java.io.FileInputStream
-import java.nio.file.Paths
-
-import com.google.auth.oauth2.GoogleCredentials
-import com.google.cloud.storage.{BlobId, StorageOptions}
-
 /**
  * @author ${user.name}
  */
+
+import com.google.cloud.language.v1.Document.Type
+import com.google.cloud.language.v1.{AnalyzeEntitiesRequest, Document, EncodingType, LanguageServiceClient}
+
+import scala.collection.JavaConversions._
+
+
 object MainClass {
 
-  private val credentialFileAddress: String = "/home/saad/learning/google-cloud/my-first-project-995398db50b9.json"
-  private val credentials = GoogleCredentials.fromStream(new FileInputStream(s"$credentialFileAddress"))
-
-
-  private val storage = StorageOptions.newBuilder.setCredentials(credentials).setProjectId("adroit-minutia-250910").build.getService
-
-  private val bucket = storage.get("test-bucket-fahad")
-
-  def main(args: Array[String]) {
-    printBucketContent()
-    downloadFile()
-    //    uploadFile("/home/saad/Desktop/Saad Ali.pdf")
-    //    printBucketContent()
-  }
-
-  def downloadFile() = {
-    val blobs = bucket.list().iterateAll()
-    val path = Paths.get("/home/saad/learning/google-cloud/saad ali.pdf")
-    blobs.forEach { blob =>
-      if (blob.getBlobId.getName.endsWith("saad ali.pdf")) {
-        val blob = storage.get(BlobId.of("test-bucket-fahad", "saad ali.pdf"))
-        blob.downloadTo(path)
-      }
+  def main(args: Array[String]): Unit = {
+    val text = "My name is Saad. I work at ABC INC. My company is situated in Lahore. I owe Afzal 23$. My phone number is +923242225259."
+    try {
+      val language = LanguageServiceClient.create
+      try {
+        val doc = Document.newBuilder.setContent(text).setType(Type.PLAIN_TEXT).build
+        val request = AnalyzeEntitiesRequest.newBuilder.setDocument(doc).setEncodingType(EncodingType.UTF16).build
+        val response = language.analyzeEntities(request)
+        // Print the response
+        for (entity <- response.getEntitiesList) {
+          for (em <- entity.getMentionsList) {
+            if (em.getType.toString == "PROPER" || entity.getType.toString == "PHONE_NUMBER") {
+              println(s"Entity: ${entity.getName}")
+              println(s"Entity Type: ${entity.getType}")
+            }
+          }
+        }
+      } finally if (language != null) language.close()
     }
-
-  }
-
-  def printBucketContent(): Unit = {
-    println("******************************************************")
-    println("**************** PRINTING BUCKET CONTENT *************")
-    println("******************************************************")
-
-    println(s"Bucket generated Id => ${bucket.getGeneratedId}")
-
-    val blobs = bucket.list()
-    blobs.iterateAll().forEach { blob =>
-      println(blob.getBlobId.getName)
-    }
-  }
-
-  def uploadFile(filePath: String) = {
-    val fileToUpload = new FileInputStream(filePath)
-    val fileName = filePath.split("/").last.toLowerCase
-    val blob = bucket.create(fileName, fileToUpload)
   }
 
 }
